@@ -25,11 +25,11 @@ class TaskCompleter:
             private_key=self.account.key).signature.hex()
 
     async def do_login(self,
-                       client: aiohttp.ClientSession) -> str:
+                       client: aiohttp.ClientSession) -> str | None:
         r: None = None
         sign_text: str = 'The wallet will be used for MEME allocation. If you referred friends, family, lovers or ' \
                          'strangers, ensure this wallet has the NFT you referred.\n\nBut also...\n\nNever gonna give ' \
-                         'you up\n\never gonna let you down\nNever gonna run around and desert you\nNever gonna make ' \
+                         'you up\n\nNever gonna let you down\nNever gonna run around and desert you\nNever gonna make ' \
                          'you cry\nNever gonna say goodbye\nNever gonna tell a lie and hurt you\n\nWallet: ' + \
                          self.account.address[:5] + "..." + self.account.address[-4:]
 
@@ -44,6 +44,10 @@ class TaskCompleter:
                                                                   'message': sign_text,
                                                                   'signature': signed_message
                                                               })
+
+                if (await r.json()).get('error', '') == 'unauthorized':
+                    logger.error(f'{self.private_key} | Not Registered')
+                    return None
 
                 return (await r.json(content_type=None))['accessToken']
 
@@ -170,7 +174,11 @@ class TaskCompleter:
                                              'origin': 'https://www.memecoin.org',
                                              'user-agent': random_useragent()
                                          }) as client:
-            auth_token: str = await self.do_login(client=client)
+            auth_token: str | None = await self.do_login(client=client)
+
+            if not auth_token:
+                return
+
             client.headers['Authorization']: str = f'Bearer {auth_token}'
 
             tasks: list = [
