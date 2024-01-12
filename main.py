@@ -21,7 +21,8 @@ async def main() -> None:
     match user_action:
         case 1:
             tasks: list = [
-                asyncio.create_task(coro=balance_parser(account_data=current_account))
+                asyncio.create_task(coro=balance_parser(account_data=current_account,
+                                                       next(proxies_cycled) if proxies_cycled else None))
                 for current_account in accounts_list
             ]
 
@@ -29,7 +30,8 @@ async def main() -> None:
 
         case 2:
             tasks: list = [
-                asyncio.create_task(coro=task_completer(account_data=current_account))
+                asyncio.create_task(coro=task_completer(account_data=current_account,
+                                   proxy=next(proxies_cycled) if proxies_cycled else None))
                 for current_account in accounts_list
             ]
 
