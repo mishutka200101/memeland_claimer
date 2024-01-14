@@ -1,3 +1,5 @@
+import aiofiles
+
 from data import config
 import asyncio
 
@@ -205,7 +207,21 @@ class TaskCompleter:
 
             await asyncio.gather(*tasks)
 
-            await self.verify_completion(client=client)
+            if await self.verify_completion(client=client):
+                logger.success(f'{account_data} | Успешно подтвердил последний Task')
+
+                file_folder: str = 'result/successfully_completed.txt'
+
+            else:
+                logger.error(f'{account_data} | Не удалось подтвердить последний Task')
+
+                file_folder: str = 'result/wrong_completed.txt'
+
+            async with loader.lock:
+                async with aiofiles.open(file=file_folder,
+                                         mode='a',
+                                         encoding='utf-8-sig') as file:
+                    await file.write(f'{account_data}\n')
 
 
 async def task_completer(account_data: str,
