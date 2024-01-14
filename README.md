@@ -9,7 +9,8 @@ _Список аккаунтов (каждый с новой строки). Ск
 _Список прокси (примере в файле). Для работы без прокси очистите файл_  
 
 ### data/config.py  
-_**CAPMONSTER_API_KEY** - API Key с сайта https://capmonster.cloud/_  
+_**CAPMONSTER_API_KEY** - API Key с сайта https://capmonster.cloud/  
+**CHANGE_PROXY_URL** - Ссылка для смены мобильных прокси (может быть пустой)_  
 
 ### data/constants.py  
 _**НЕ ТРОГАТЬ**_  
