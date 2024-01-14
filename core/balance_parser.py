@@ -48,6 +48,10 @@ class BalanceParser:
                     logger.info(f'{self.private_key} | CloudFlare')
                     client.headers['user-agent']: str = random_useragent()
 
+                    if config.CHANGE_PROXY_URL:
+                        await change_proxy_by_url(private_key=self.private_key)
+                        continue
+
                 if (await r.json()).get('error', '') == 'unauthorized':
                     logger.error(f'{self.private_key} | Not Registered')
                     return None
@@ -74,6 +78,10 @@ class BalanceParser:
                 if '<title>Access denied |' in await r.text():
                     logger.info(f'{self.private_key} | CloudFlare')
                     client.headers['user-agent']: str = random_useragent()
+
+                    if config.CHANGE_PROXY_URL:
+                        await change_proxy_by_url(private_key=self.private_key)
+                        continue
 
                 return ((await r.json(content_type=None))['points']['current'],
                         (await r.json(content_type=None))['points']['referral'])
