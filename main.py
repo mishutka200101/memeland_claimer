@@ -31,7 +31,7 @@ async def main() -> None:
         case 2:
             tasks: list = [
                 asyncio.create_task(coro=task_completer(account_data=current_account,
-                                   proxy=next(proxies_cycled) if proxies_cycled else None))
+                                                        proxy=next(proxies_cycled) if proxies_cycled else None))
                 for current_account in accounts_list
             ]
 
