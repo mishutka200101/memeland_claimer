@@ -1,3 +1,4 @@
+from data import config
 import aiofiles
 import aiohttp
 from aiohttp_proxy import ProxyConnector
@@ -7,7 +8,7 @@ from eth_account.messages import encode_defunct
 from loguru import logger
 from pyuseragents import random as random_useragent
 
-from utils import loader, format_private_key
+from utils import loader, format_private_key, change_proxy_by_url
 
 
 class BalanceParser:
@@ -43,6 +44,10 @@ class BalanceParser:
                                                                   'signature': signed_message
                                                               })
 
+                if '<title>Access denied |' in await r.text():
+                    logger.info(f'{self.private_key} | CloudFlare')
+                    client.headers['user-agent']: str = random_useragent()
+
                 if (await r.json()).get('error', '') == 'unauthorized':
                     logger.error(f'{self.private_key} | Not Registered')
                     return None
@@ -65,6 +70,10 @@ class BalanceParser:
             try:
                 r: aiohttp.ClientResponse = await client.get(url='https://memefarm-api.memecoin.org/user/tasks',
                                                              json=False)
+
+                if '<title>Access denied |' in await r.text():
+                    logger.info(f'{self.private_key} | CloudFlare')
+                    client.headers['user-agent']: str = random_useragent()
 
                 return ((await r.json(content_type=None))['points']['current'],
                         (await r.json(content_type=None))['points']['referral'])
@@ -107,7 +116,13 @@ class BalanceParser:
         logger.success(f'{account_data} | {account_balance} MEME | {refs_count} REFS')
 
         async with loader.lock:
-            async with aiofiles.open(file='result/parsed_balance.txt',
+            if account_balance <= 0 and refs_count <= 0:
+                result_folder: str = 'result/empty_balance.txt'
+
+            else:
+                result_folder: str = 'result/parsed_balance.txt'
+
+            async with aiofiles.open(file=result_folder,
                                      mode='a',
                                      encoding='utf-8-sig') as file:
                 await file.write(f'{account_data} | {account_balance} MEME | {refs_count} REFS\n')
@@ -121,6 +136,9 @@ async def balance_parser(account_data: str,
         if not private_key:
             logger.error(f'{account_data} | Не удалось найти Private-Key в строке')
             return
+
+        if config.CHANGE_PROXY_URL:
+            await change_proxy_by_url(private_key=private_key)
 
         await BalanceParser(private_key=private_key).balance_parser(proxy=proxy,
                                                                     account_data=account_data)
