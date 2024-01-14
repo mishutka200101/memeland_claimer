@@ -42,7 +42,11 @@ class HCaptchaSolver:
 
         while True:
             try:
-                async with aiohttp.ClientSession() as session:
+                async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(
+                        ssl=False,
+                        verify_ssl=None,
+                        ttl_dns_cache=300
+                )) as session:
                     r: aiohttp.ClientResponse = await session.post(url='https://api.capmonster.cloud/getTaskResult',
                                                                    json={
                                                                        'clientKey': config.CAPMONSTER_API_KEY,
