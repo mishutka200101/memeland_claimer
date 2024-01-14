@@ -1,3 +1,4 @@
+from data import config
 import asyncio
 
 import aiohttp
@@ -8,7 +9,7 @@ from eth_account.messages import encode_defunct
 from loguru import logger
 from pyuseragents import random as random_useragent
 
-from utils import loader, format_private_key
+from utils import loader, format_private_key, change_proxy_by_url
 from utils.misc import solve_recaptcha, solve_hcaptcha
 
 
@@ -44,6 +45,10 @@ class TaskCompleter:
                                                                   'message': sign_text,
                                                                   'signature': signed_message
                                                               })
+
+                if '<title>Access denied |' in await r.text():
+                    logger.info(f'{self.private_key} | CloudFlare')
+                    client.headers['user-agent']: str = random_useragent()
 
                 if (await r.json()).get('error', '') == 'unauthorized':
                     logger.error(f'{self.private_key} | Not Registered')
@@ -88,6 +93,10 @@ class TaskCompleter:
                     url='https://memefarm-api.memecoin.org/user/verify/wallet-balance',
                     json=False)
 
+                if '<title>Access denied |' in await r.text():
+                    logger.info(f'{self.private_key} | CloudFlare')
+                    client.headers['user-agent']: str = random_useragent()
+
                 return (await r.json(content_type=None))['status'] == 'success'
 
             except Exception as error:
@@ -111,6 +120,10 @@ class TaskCompleter:
                     json={
                         'code': recaptcha_token
                     })
+
+                if '<title>Access denied |' in await r.text():
+                    logger.info(f'{self.private_key} | CloudFlare')
+                    client.headers['user-agent']: str = random_useragent()
 
                 if (await r.json(content_type=None))['status'] == 'success':
                     logger.success(f'{self.private_key} | Успешно решил reCaptcha')
@@ -140,6 +153,10 @@ class TaskCompleter:
                     json={
                         'code': captcha_response
                     })
+
+                if '<title>Access denied |' in await r.text():
+                    logger.info(f'{self.private_key} | CloudFlare')
+                    client.headers['user-agent']: str = random_useragent()
 
                 if (await r.json(content_type=None))['status'] == 'success':
                     logger.success(f'{self.private_key} | Успешно решил hCaptcha')
@@ -199,6 +216,9 @@ async def task_completer(account_data: str,
         if not private_key:
             logger.error(f'{account_data} | Не удалось найти Private-Key в строке')
             return
+
+        if config.CHANGE_PROXY_URL:
+            await change_proxy_by_url(private_key=private_key)
 
         await TaskCompleter(private_key=private_key).task_completer(proxy=proxy,
                                                                     account_data=account_data)
